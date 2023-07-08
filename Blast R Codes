@@ -1,0 +1,212 @@
+#import library
+library(rBLAST)
+library(filesstrings)
+library(Biostrings)
+library(tidyr)
+library(ggplot2)
+library(pheatmap)
+
+ismailWorkingDirectory <-"/home/hackbio/ismail"
+
+genomenames <- c()
+for (fileN in list.files("assembeled_genomes/")) {
+  #print(fileN)
+  myFiles <- strsplit(fileN, ".fasta")[[1]][1]
+  genomenames <- c(genomenames, myFiles)
+  dir.create(paste0("FullGenomes/", myFiles))
+  #print(paste0("FullGenomes/", myFiles))
+  file.copy(paste0("assembeled_genomes/", fileN), paste0("FullGenomes/", myFiles))
+}
+
+katG <- readDNAStringSet("resistance_genes/katG.fasta")
+gyrA <- readDNAStringSet("resistance_genes/gyrA.fasta")
+gyrB <- readDNAStringSet("resistance_genes/gyrB.fasta")
+embB <- readDNAStringSet("resistance_genes/embB.fasta")
+inhA <- readDNAStringSet("resistance_genes/inhA.fasta")
+pncA <- readDNAStringSet("resistance_genes/pncA.fasta")
+rpoB <- readDNAStringSet("resistance_genes/rpoB.fasta")
+rrs <- readDNAStringSet("resistance_genes/rrs.fasta")
+
+
+katGresult <- c()
+
+gyrAresult <- c()
+gyrBresult <- c()
+embBresult <- c()
+inhAresult <- c()
+pncAresult <- c()
+rpoBresult <- c()
+rrsresult <- c()
+
+
+
+
+
+
+#perform BLAST
+for (iGen in genomenames) {
+  print(which(iGen == genomenames))
+  
+  
+  
+  #implement blast
+  makeblastdb(paste0(ismailWorkingDirectory, "/FullGenomes/", iGen, paste0("/",iGen, '.fasta')))
+  currBl <- blast(db = paste0(ismailWorkingDirectory, "/FullGenomes/", iGen, paste0("/",iGen, '.fasta')))
+  
+  #katG (accepts the results iteratively and incrementally)
+  katGCl <- predict(currBl, katG)
+  katGresult <- c(katGresult, list(katGCl))
+  
+  #gyrA (accepts the results iteratively and incrementally)
+  gyrACl <- predict(currBl, gyrA)
+  gyrAresult <- c(gyrAresult, list(gyrACl))
+  
+  #gyrB (accepts the results iteratively and incrementally)
+  gyrBCl <- predict(currBl, gyrB)
+  gyrBresult <- c(gyrBresult, list(gyrBCl))
+  
+  #embB (accepts the results iteratively and incrementally)
+  embBCl <- predict(currBl, embB)
+  embBresult <- c(embBresult, list(embBCl))
+  
+  #inhA (accepts the results iteratively and incrementally)
+  inhACl <- predict(currBl, inhA)
+  inhAresult <- c(inhAresult, list(inhACl))
+  
+  #pncA (accepts the results iteratively and incrementally)
+  pncACl <- predict(currBl, pncA)
+  pncAresult <- c(pncAresult, list(pncACl))
+  
+  #rpoB (accepts the results iteratively and incrementally)
+  rpoBCl <- predict(currBl, rpoB)
+  rpoBresult <- c(rpoBresult, list(rpoBCl))
+  
+  #rrs (accepts the results iteratively and incrementally)
+  rrsCl <- predict(currBl, rrs)
+  rrsresult <- c(rrsresult, list(rrsCl))
+  
+  
+}
+
+#process the results and extract percent identity (you can extract other details too) 
+katGresultProc <- c()
+gyrAresultProc <- c()
+gyrBresultProc <- c()
+embBresultProc <- c()
+inhAresultProc <- c()
+pncAresultProc <- c()
+rpoBresultProc <- c()
+rrsresultProc <- c()
+
+for (i in 1:length(katGresult)) {
+  if(class(katGresult[[i]]$Perc.Ident) == 'logical'){
+    katGresultProc <- c(katGresultProc, 0)
+  }else{
+    katGresultProc <- c(katGresultProc, katGresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(gyrAresult[[i]]$Perc.Ident) == 'logical'){
+    gyrAresultProc <- c(gyrAresultProc, 0)
+  }else{
+    gyrAresultProc <- c(gyrAresultProc, gyrAresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(gyrBresult[[i]]$Perc.Ident) == 'logical'){
+    gyrBresultProc <- c(gyrBresultProc, 0)
+  }else{
+    gyrBresultProc <- c(gyrBresultProc, gyrBresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(embBresult[[i]]$Perc.Ident) == 'logical'){
+    embBresultProc <- c(embBresultProc, 0)
+  }else{
+    embBresultProc <- c(embBresultProc, embBresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(inhAresult[[i]]$Perc.Ident) == 'logical'){
+    inhAresultProc <- c(inhAresultProc, 0)
+  }else{
+    inhAresultProc <- c(inhAresultProc, inhAresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(pncAresult[[i]]$Perc.Ident) == 'logical'){
+    pncAresultProc <- c(pncAresultProc, 0)
+  }else{
+    pncAresultProc <- c(pncAresultProc, pncAresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(rpoBresult[[i]]$Perc.Ident) == 'logical'){
+    rpoBresultProc <- c(rpoBresultProc, 0)
+  }else{
+    rpoBresultProc <- c(rpoBresultProc, rpoBresult[[i]]$Perc.Ident[1])
+  }
+  
+  if(class(rrsresult[[i]]$Perc.Ident) == 'logical'){
+    rrsresultProc <- c(rrsresultProc, 0)
+  }else{
+    rrsresultProc <- c(rrsresultProc, rrsresult[[i]]$Perc.Ident[1])
+  }
+  
+  
+}
+
+length(katGresultProc) #should be equal to the total number of input genomes
+
+print(katGresultProc)
+### extra processing to export your data
+finalProcessedData <- data.frame("strain_id" = genomenames,
+                                 "katG" = katGresultProc,
+                                 "gyrA"= gyrAresultProc,
+                                 "gyrB" =   gyrBresultProc,
+                                 "embB" = embBresultProc,
+                                 "inhA" = inhAresultProc,
+                                 "pncA" = pncAresultProc,
+                                 "rpoB" = rpoBresultProc,
+                                 "rrs" = rrsresultProc)
+
+View(finalProcessedData)
+plot(finalProcessedData$gyrB, finalProcessedData$gyrA)
+
+
+#using ggplot2 to visualize the data
+attach(finalProcessedData)
+ggplot(finalProcessedData, aes(x = strain_id, y = rrs, group = 1)) +
+  geom_point(color = 'red') +
+  geom_line()
+attach(finalProcessedData)
+
+
+#creating a ggplot plot for all columns(genes)
+# Specify the columns you want to visualize
+columns <- c("katG", "gyrA", "gyrB","embB","inhA","pncA","rpoB", "rrs") 
+
+
+# Create a new data frame with the selected columns
+selectedData <- finalProcessedData[, c("strain_id", columns)]
+
+# Reshape the data to long format using tidyr
+selectedData_long <- pivot_longer(selectedData, cols = columns, names_to = "column", values_to = "value")
+
+# Plot the data using ggplot2
+ggplot(selectedData_long, aes(x = strain_id, y = value, color = column, group = column)) +
+  geom_point() +
+  geom_line() +
+  labs(color = "Column")
+
+
+# Create a matrix or data frame with the data for multiple columns (genes)
+heatmap_data <- finalProcessedData[, c("katG", "gyrA", "gyrB", "embB","inhA", "pncA", "rpoB","rrs")]
+pheatmap(heatmap_data, color = colorRampPalette(c("blue", "seagreen", "red","purple","orange","green","yellow","violet"))(100))
+
+
+# Create a matrix or data frame with the data for individual columns (genes)
+heatmap_data <- finalProcessedData[, c("katG")]
+pheatmap(heatmap_data, color = colorRampPalette(c("seagreen"))(100))
+
+
+# Create a matrix or data frame with the data for individual columns (genes)
+heatmap_data <- finalProcessedData[, "katG"]
+         
+# Generate the heatmap using pheatmap()
+pheatmap(heatmap_data, color = colorRampPalette("seagreen")(100))
+         
